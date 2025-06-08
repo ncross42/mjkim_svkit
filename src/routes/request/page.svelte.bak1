@@ -1,0 +1,131 @@
+<script>
+  import preset from './preset.js';
+  import options from './options.js';
+
+  let budget = $state("300");
+  let base_type = $state("1");
+  let imageOptions = $state([]);
+  let formData = $state({});
+
+  let optionFields = ['width', 'height', 'frame_color', 'glass_color', 'devices', 'operation', 'thickness', 'handle', 'silence', 'daylight'];
+  let optionValues = $state({});
+
+  // 초기화
+  optionFields.forEach(key => {
+    optionValues[key] = options[key] || [];
+    formData[key] = optionValues[key][0]; // 기본값 첫 번째 값으로 초기화
+  });
+
+  // budget이 실제로 변경될 때만 실행 (더 간단한 방법)
+  $effect.pre(() => {
+    console.log('Budget changed to:', budget);
+    updateImageOptions();
+  });
+
+  // budget 또는 base_type이 실제로 변경될 때만 실행
+  $effect.pre(() => {
+    console.log('Updating option values for budget:', budget, 'base_type:', base_type);
+    updateOptionValues();
+  });
+
+  function updateImageOptions() {
+    if (!budget) return;
+    
+    const presets = preset[budget] || [];
+    const newImageOptions = presets.map((_, i) => ({
+      value: `${i + 1}`,
+      src: `/budget_imgs/${budget}_${i + 1}.png`
+    }));
+    
+    // 배열 내용이 실제로 다를 때만 업데이트
+    if (JSON.stringify(imageOptions) !== JSON.stringify(newImageOptions)) {
+      imageOptions = newImageOptions;
+      
+      // 이미지 옵션이 있으면 첫 번째를 기본값으로 설정
+      if (newImageOptions.length > 0 && base_type !== newImageOptions[0].value) {
+        base_type = newImageOptions[0].value;
+      }
+    }
+  }
+
+  function updateOptionValues() {
+    if (!budget || !base_type) return;
+    
+    const index = parseInt(base_type) - 1;
+    const selected = preset[budget]?.[index];
+    
+    if (selected) {
+      let hasChanges = false;
+      const newFormData = { ...formData };
+      
+      optionFields.forEach(key => {
+        optionValues[key] = options[key] || [];
+        const newValue = selected[key] || optionValues[key][0];
+        if (newFormData[key] !== newValue) {
+          newFormData[key] = newValue;
+          hasChanges = true;
+        }
+      });
+      
+      if (hasChanges) {
+        formData = newFormData;
+      }
+    }
+  }
+
+  // 초기 실행
+  updateImageOptions();
+  updateOptionValues();
+</script>
+
+<svelte:head>
+	<title>Request Page</title>
+	<meta name="description" content="Request Page" />
+</svelte:head>
+
+<p>Presets loaded: {Object.keys(preset).length} Budget types</p>
+
+<div>
+  <!-- Form Section -->
+  <form method="POST" action="/generate" class="p-4 max-w-xl mx-auto space-y-6">
+    <!-- Budget radio -->
+    <div class="space-y-2">
+      <p class="font-semibold">금액대 선택</p>
+      <label><input type="radio" name="budget" value="300" bind:group={budget} /> 300만원</label>
+      <label><input type="radio" name="budget" value="700" bind:group={budget} /> 700만원</label>
+    </div>
+
+    <!-- Image Selection -->
+    {#if imageOptions.length > 0}
+    <div class="grid grid-cols-3 gap-4">
+      {#each imageOptions as img}
+        <label class="block border p-2">
+          <input type="radio" name="base_type" value={img.value} bind:group={base_type} class="mb-2" />
+          <img src={img.src} alt="Option {img.value}" width="200" height="150" />
+        </label>
+      {/each}
+    </div>
+    {/if}
+
+    <!-- radioBoxes -->
+    {#each optionFields as field}
+      <div class="space-y-1">
+        <p class="font-medium">{field}</p>
+        <div class="flex flex-wrap gap-3">
+          {#each optionValues[field] as val}
+            <label class="flex items-center space-x-1">
+              <input type="radio" name={field} value={val} bind:group={formData[field]} />
+              <span>{val}</span>
+            </label>
+          {/each}
+        </div>
+      </div>
+    {/each}
+
+    <!-- Buttons -->
+    <div class="flex space-x-4">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Generate</button>
+      <button type="reset" class="bg-gray-300 px-4 py-2 rounded">Reset</button>
+    </div>
+  </form>
+</div>
