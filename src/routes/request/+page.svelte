@@ -1,4 +1,5 @@
 <script>
+  import { goto } from '$app/navigation';
   import preset from './preset.js';
   import options from './options.js';
 
@@ -103,6 +104,20 @@
     return userModifiedFields.has(field);
   }
 
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const params = new URLSearchParams();
+
+    for (const [key, value] of formData.entries()) {
+      params.append(key, value.toString());
+    }
+
+    // 수동으로 result로 이동
+    await goto(`/result?${params.toString()}`);
+  }
+
   // Reset 버튼 핸들러
   function handleReset() {
     // userModifiedFields 초기화
@@ -130,7 +145,8 @@
 
 <div>
   <!-- Form Section -->
-  <form method="POST" action="/generate" class="p-6 max-w-4xl mx-auto space-y-8 bg-gray-50 min-h-screen">
+  <form onsubmit={handleSubmit} class="p-6 max-w-4xl mx-auto space-y-8 bg-gray-50 min-h-screen">
+  <!-- <form method="POST" action="/generate" class="p-6 max-w-4xl mx-auto space-y-8 bg-gray-50 min-h-screen"> -->
     <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
     <!-- Budget radio -->
     <div class="space-y-3">
