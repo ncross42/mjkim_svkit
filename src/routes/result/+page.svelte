@@ -9,6 +9,7 @@
     const params = new URLSearchParams(window.location.search);
     const entries = Object.fromEntries(params.entries());
     formData.set(entries);
+    console.log(entries);
   });
 </script>
 
@@ -25,10 +26,10 @@
     <img src={windowImage} alt="Result Window" />
   </div>
 
-  <h2 class="text-2xl font-bold text-gray-800">제출된 정보</h2>
+  <!-- <h2 class="text-2xl font-bold text-gray-800">제출된 정보</h2>
   <div class="bg-gray-100 rounded-xl p-4 overflow-auto">
     <pre class="text-sm text-gray-800">{JSON.stringify($formData, null, 2)}</pre>
-  </div>
+  </div> -->
 {:else}
   <div class="bg-gray-100 rounded-xl p-4 overflow-auto">
     <pre class="text-sm text-gray-800">제출된 데이터가 없습니다.</pre>
